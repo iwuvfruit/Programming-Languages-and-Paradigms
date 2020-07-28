@@ -526,3 +526,131 @@ x = a + dx/2
 l = dx 
 let rec integral f (lo, hi) dx = 
 	dx *. iter_sum (fun x -> f x *. dx) (lo +. (dx /. 2.0), hi)
+
+ 
+let area : float -> float = function r -> pi *. r *. r 
+let area (r: float) = pi *.r *.r 
+The variable name area is bound to the value function r -> pi *.r *.r which Ocaml prints simply as <fun>
+The type of the variable area is float -> float 
+We swtich viewpoint:
+we wrtie a functon curry that takes as input a function f:('a*'b) -> 'c 
+then returns as a result a function 'a ->'b->'c
+
+let curry f = (fun x y -> f (x , y))
+let curry2 f x y = f (x, y) 
+let curry3 = fun f -> fun x -> fun y -> f (x, y)
+
+approximating the drivative: 
+derivative takes a function and returns a function. f'(x) = (f (x + e) - f(x)) / e
+deriv: (float -> float) * float -> (float -> float)
+given a function f:float -> float and an epsilon dx: float. 
+returns a function float -> float describing the derivative of f. 
+
+let deriv(f, dx) = fun x -> (f (x +. dx) -. f x) /. dx 
+
+we can use higher order functions to perform partial evaluation or code generation.
+ex) code generation: returning functions. 
+pow: int -> int -> int that computes n^k
+let pow k n =
+	if k = 0 then 1 
+	else n * pow k-1 n 
+the expression pow 2 does not evaluate further; functions wait until all their arguments are given 
+before reducing. by cleverly refactoring, we can get his to compute even given only one argument.  *)
+
+code 
+ 
+curry: (('a * 'b) -> 'c) -> ('a ->'b ->'c)
+this is equivalent to (('a *'b)-> 'c) -> 'a ->'b->'c
+let curry f = (fun x y -> f (x, y))
+when we only give curry a concrete function test: 'a *'b -> 'c then curry will be partially evaluated. 
+and produce a function fun x -> fun y -> f(x,y) which is equivalent to fun x y -> f(x,y)
+fun describes an anonymous function which can take in multiple arguments but doesn't allow pattern matching on the arguments.
+let curry' f x y = f(x, y)
+let cur = fun f -> fun x -> fun y -> f(x,y) *)
+
+what happens if we try and execute the following:
+let cur = fun f -> fun x -> fun y -> f(x,y)
+let plus(x, y) = x + y;; int *int -> int 
+cur plus ;; int -> int -> int 
+
+uncurry: ('a ->'b ->'c) -> (('a *'b) -> 'c)
+let uncurry f = (fun(y,x) -> f y x)
+
+
+pow: int -> int -> int that computes n^k
+let pow k n =
+	if k = 0 then 1 
+	else n * pow k-1 n 
+
+let rec pow_tl k n acc = 
+	if k = 0 then acc 
+	else n * pow_tl (k-1) n (n * acc)
+
+let rec powGen k cont = 
+	if k = 0 then cont 
+	else powGen (k-1) (fun n -> n * (cont n)) 
+
+powGen 2 (fun n -> 1)
+-> powGen 1 (fun n -> n * (fun n -> 1) n)
+-> powGen 0 (fun n -> n * (fun n -> n * (fun n->1) n) n)
+-> fun n -> n * (fun n -> n * (fun n -> n * (fun n->1) n) n)
+= fun n -> n * 									1         n 
+
+///Need help understanding: code generator + currying 
+
+How do i prove that all slices of cake are tasty using structural induction?
+1)define a set of cake slices recursively. 
+A slice is cake.
+If slice and slice are cake then both of them put together is still cake 
+2)prove a signe piece of cake is tasty 
+3)use recursive definition of the set to prove that all slices are tasty
+4)conclude all slices of cake are tasty 
+
+Inductive definition of a list:
+The empty list [] is a list of type 'a list
+If x is an element of type 'a and xs is a list of type 'a list then x:xs is a list of type 'a list
+Nothing else is a list of type 'a list 
+type 'a list = 
+|[] 
+|(::) of 'a *'a list 
+
+To prove that a property p holds for a list l 
+Base Case: l = [] 
+show p([]) holds
+step case: l = x :: xs 
+IH P(xs) Assume the property p holds for lists smaller than l. 
+show P(x:xs) holds. show the property p holds for the list x::Xs 
+
+The empty tree Empty is a binary tree of type 'a tree
+If l: 'a tree and r: 'a tree are binary trees and v: 'a is a data item then 
+Node(l, v, r) is a binary tree. 
+Nothing else is a binary tree. 
+
+type 'a tree = 
+|Empty 
+|Node of 'a tree *'a *'a tree
+
+A binary search tree t: ('a *'b) tree is a binary tree. 
+we call the first component of each pair in the tree a key. 
+we call the second component of each pair in the tree a value. 
+A binary search tree implements the dictionary abstract data type: it's a map from keys to values 
+Crucially, such an abstract data type supports two operations. 
+1. lookup operation for retreiving the value associated to a given key. 
+2. insert operation for inseting a vlaue associated with a given key. 
+To be a BST, a binary tree t must maintain the BST property. 
+For every Node(l, (k, v) r) in t, we have that: for any key k' in the subtree l, we have k' <= k 
+											: for any key k' in the subtree r, we have k' >= k 
+The insert operation must be implemented to preserve this property 
+
+We can analyze their structure 
+To prove a property P(t) holds for a binary tree t:'a tree
+Base Case: suppose t = Empty 
+Show P(Empty) holds 
+
+Step Case: suppose t = Node(l, x, r) //Assume the property p holds for trees smaller than t 
+IH P(l)
+IH P(r) 
+show P(Node(l, x, r)) holds. //Show the property p holds for the tree Node(l, x, r)
+
+Datatypes: Binary Trees 
+tree 'a tree = Empty | Node of 'a tree * 'a * 'a tree 
